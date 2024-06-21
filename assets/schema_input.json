@@ -7,35 +7,42 @@
     "items": {
         "type": "object",
         "properties": {
+            "rid": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "RID id specific for individual run and individual sample"
+            },
+            "sid": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "SID id specific for the samples across run"
+            },
             "sample": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces"
-            },
-            "fastq_1": {
-                "type": "string",
-                "pattern": "^\\S+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
-            },
-            "fastq_2": {
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
-                "anyOf": [
-                    {
-                        "type": "string",
-                        "pattern": "^\\S+\\.f(ast)?q\\.gz$"
-                    },
-                    {
-                        "type": "string",
-                        "maxLength": 0
-                    }
-                ]
+                "errorMessage": "Sample name or condition, this will be automatically combined with the replicate by an underscore "
             },
             "replicate": {
-                "type": "integer",
-                "pattern": "^[1-9][0-9]*$",
-                "errorMessage": "Integer representing replicate number. Must start from 1..<number of replicates>."
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Replicate number in the form of R1,R2,R3,.. or r1,r2,r3"
+            },
+            "path": {
+                "type": "string",
+                "pattern":"^\\S+$",
+                "errorMessage": "Path to the run folder as demultiplexed by the facility"
+            },
+            "lanes": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Given the schema of sample name demultiplexed which is: 'rid...sid...ll..R1..fastq.gz' ll being the lane number of the sequencer. if all is specified any lane will be combined " 
+            },
+            "experiment": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "experiment "
             }
         },
-        "required": ["sample", "fastq_1", "replicate"]
+        "required": ["rid","sid","sample","replicate","path","lanes","experiment"]
     }
 }

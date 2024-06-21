@@ -37,12 +37,12 @@ process BAM_FILTER {
             $blacklist \\
             -b $bam > ${prefix}.filter1.bam
         
-        # remove ,multi mappers that are not NH:i:1 i.e. multi mappers
+        # remove multi mappers that are not NH:i:1 i.e. multi mappers
         # Filter those pairs that have insert size compatible with the fragment length:
         # Default to 4 * the computed insert size:
 
-        samtools view -h ${prefix}.filter1b.bam | \\
-            awk -v var="$max_frag" '{if(substr(\$0,1,1)=="@" || ( (\$9>0?\$9:-\$9)<=var && (\$9>0?\$9:-\$9)>=38)) print \$0}' | \\
+        samtools view -h ${prefix}.filter1.bam | \\
+            awk -v var="$max_frag" '{if(substr(\$0,1,1)=="@" || ((\$9>=0?\$9:-\$9)<=var)) print \$0}' | \\
             grep -E "(NH:i:1\\b|^@)" | \\
             samtools view -b > ${prefix}.filter2.bam
 
@@ -66,8 +66,8 @@ process BAM_FILTER {
         # Default to 4 * the computed insert size:
         
         samtools view -h ${prefix}.filter1.bam | \\
-        awk -v var="$max_frag" '{if(substr(\$0,1,1)=="@" || ( (\$9>0?\$9:-\$9)<=var && (\$9>0?\$9:-\$9)>=38)) print \$0}' | \\
-        samtools view -b > ${prefix}.filter2.bam
+            awk -v var="$max_frag" '{if(substr(\$0,1,1)=="@" || ((\$9>=0?\$9:-\$9)<=var)) print \$0}' | \\
+            samtools view -b > ${prefix}.filter2.bam
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

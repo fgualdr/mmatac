@@ -164,7 +164,7 @@ def check_samplesheet(file_in, file_out):
                         if sample and len(fastqs_1) !=0 and len(fastqs_2) !=0:  ## Paired-end short reads
                             sample_info = ["0", str(fastqs_1[0]), str(fastqs_2[0]), experiment]
                         elif sample and len(fastqs_1) !=0 and len(fastqs_2) ==0:  ## Single-end short reads
-                            sample_info = ["1", str(fastqs_1[0]), str(fastqs_2[0]), experiment]
+                            sample_info = ["1", str(fastqs_1[0]), str(""), experiment]
                         else:
                             print_error("Invalid combination of columns provided!", "Line", line)
                         

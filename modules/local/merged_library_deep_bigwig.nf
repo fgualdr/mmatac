@@ -20,7 +20,7 @@ process MERGED_LIBRARY_DEEPTOOL_BIGWIG {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     def pe     = meta.single_end ? '' : '-pc'
-    def extend = (meta.single_end && params.fragment_size > 0) ? "-fs ${params.fragment_size}" : ''
+    def extend = (meta.single_end && params.fragment_size > 0) ? "--extendReads ${params.fragment_size}" : '--extendReads'
     """
 
     bamCoverage \\
@@ -28,7 +28,7 @@ process MERGED_LIBRARY_DEEPTOOL_BIGWIG {
         --binSize 1 \\
         --numberOfProcessors $task.cpus \\
         --normalizeUsing CPM \\
-        --extendReads \\
+        $extend \\
         --maxFragmentLength 10000 \\
         -o ${prefix}.extend.bw
 
@@ -37,7 +37,7 @@ process MERGED_LIBRARY_DEEPTOOL_BIGWIG {
         --binSize 1 \\
         --numberOfProcessors $task.cpus \\
         --normalizeUsing CPM \\
-        --extendReads \\
+        $extend \\
         --maxFragmentLength 10000 \\
         -o ${prefix}.extend.center.bw
 

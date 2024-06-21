@@ -16,7 +16,7 @@ WorkflowMMAtacseq.initialise(params, log, valid_params)
 // Check input path parameters to see if they exist
 def checkPathParamList = [
     params.input, params.multiqc_config,
-    params.fasta,
+    params.fasta,params.public_data_ids,
     params.gtf, params.gff, params.gene_bed, params.tss_bed,
     params.star_index,
     params.blacklist,
@@ -25,8 +25,18 @@ def checkPathParamList = [
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-
+if (params.input) { 
+    ch_input = file(params.input) 
+    ch_public_data_ids = false
+} else { 
+    // exit 1, 'Input samplesheet or public_data_ids not specified!' 
+    if (params.public_data_ids) {
+        ch_public_data_ids = file(params.public_data_ids)
+        ch_input = false
+    } else {
+        exit 1, 'Input samplesheet or public_data_ids not specified!' 
+    }
+}
 // Save AWS IGenomes file containing annotation version
 def anno_readme = params.genomes[ params.genome ]?.readme
 if (anno_readme && file(anno_readme).exists()) {
@@ -76,6 +86,7 @@ include { MERGED_LIBRARY_DEEPTOOLS_BIGWIG_NORM   } from '../modules/local/merged
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
+include { FASTQ_FROM_SRA } from '../subworkflows/local/fastq_from_sra'
 include { INPUT_CHECK    } from '../subworkflows/local/input_check'
 include { PREPARE_GENOME } from '../subworkflows/local/prepare_genome'
 include { ALIGN_STAR     } from '../subworkflows/local/align_star'
@@ -140,11 +151,37 @@ workflow MMATACSEQ {
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
-    INPUT_CHECK (
-        ch_input,
-        params.seq_center
-    )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+
+    if( ch_public_data_ids ){
+        // FASTQ_FROM_SRA takes the public_data_ids and generate a channel of [meta, fastq]
+        // we need to apply a map to assess if there are fastqs ending with _2.fastq.gz so we set the meta.single_end to false
+        // then if there are multiple _1 and multiple _2 we flatten them with ',' and we set the meta.single_end to true
+        FASTQ_FROM_SRA (
+            ch_public_data_ids
+        )
+        
+        ch_versions = ch_versions.mix(FASTQ_FROM_SRA.out.versions)
+        ch_versions.view()
+
+    } else if(ch_input){
+
+        INPUT_CHECK (
+            ch_input,
+            params.seq_center
+        )
+        ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
+    }
+
+    if (ch_public_data_ids) {
+        FASTQ_FROM_SRA.out.reads
+            .map {
+                meta, fastq -> [meta,fastq.flatten()]}
+            .set { ch_reads }
+    } else if (ch_input) {
+        INPUT_CHECK.out.reads
+            .set { ch_reads }
+        
+    }
 
     //
     // SUBWORKFLOW: Read QC, extract UMI and trim adapters with TrimGalore!
@@ -156,7 +193,7 @@ workflow MMATACSEQ {
     ch_trim_read_count     = Channel.empty()
     if (params.trimmer == 'trimgalore') {
         FASTQ_FASTQC_UMITOOLS_TRIMGALORE (
-            INPUT_CHECK.out.reads,
+            ch_reads,
             params.skip_fastqc || params.skip_qc,
             false,
             false,
@@ -176,7 +213,7 @@ workflow MMATACSEQ {
     //
     if (params.trimmer == 'fastp') {
         FASTQ_FASTQC_UMITOOLS_FASTP (
-            INPUT_CHECK.out.reads,
+            ch_reads,
             params.skip_fastqc || params.skip_qc,
             false,
             false,
@@ -227,7 +264,7 @@ workflow MMATACSEQ {
             meta, bam ->
                 def meta_clone = meta.clone()
                 meta_clone.remove('read_group')
-                meta_clone.id = meta_clone.id - ~/_T\d+$/
+                meta_clone.id = meta.id.replaceAll(/_[^_]+$/, "")
                 [ meta_clone, bam ]
         }
         .groupTuple(by: [0])
@@ -293,10 +330,10 @@ workflow MMATACSEQ {
     //
     // SUBWORKFLOW: BigWig coverage tracks CPM with deeptools:
     //
-    // MERGED_LIBRARY_DEEPTOOL_BIGWIG (
-    //     ch_bam_bai
-    // )
-    // ch_versions = ch_versions.mix(MERGED_LIBRARY_DEEPTOOL_BIGWIG.out.versions)
+     MERGED_LIBRARY_DEEPTOOL_BIGWIG (
+         ch_bam_bai
+     )
+    ch_versions = ch_versions.mix(MERGED_LIBRARY_DEEPTOOL_BIGWIG.out.versions)
 
     //
     // MODULE: deepTools plotFingerprint QC
