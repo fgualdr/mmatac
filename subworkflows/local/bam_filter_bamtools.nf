@@ -3,8 +3,6 @@
  */ 
 // include { BAM_FRAGMENT       } from '../../modules/local/bam_fragment'
 include { BAM_FILTER         } from '../../modules/local/bam_filter'
-
-
 include { BAM_EM_PREP         } from '../../modules/local/bam_em_prep'
 include { BAM_EM         } from '../../modules/local/bam_em'
 include { BAM_EM_OUT         } from '../../modules/local/bam_em_out'
@@ -65,6 +63,7 @@ workflow BAM_FILTER_BAMTOOLS {
         BAM_EM_OUT( ch_em_bam,
                     ch_chrom_sizes
                     ) 
+
         ch_versions = ch_versions.mix(BAM_EM_OUT.out.versions.first())
         ch_filter_bam = BAM_EM_OUT.out.bam
 

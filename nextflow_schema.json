@@ -53,7 +53,7 @@
                     "type": "integer",
                     "description": "Read length used to calculate MACS2 genome size for peak calling if `--macs_gsize` isn't provided.",
                     "fa_icon": "fas fa-chart-area",
-                    "enum": [50, 60, 75, 100, 150, 200]
+                    "enum": [50, 60, 74, 75, 100, 150, 200]
                 },
                 "outdir": {
                     "type": "string",
@@ -449,12 +449,12 @@
 
                 "sigma_times": {
                     "type": "number",
-                    "default": 1,
+                    "default": 1.0,
                     "description": "Number of sigmas to include invariant features"
                 },
 
                 "n_pop": {
-                    "type": "integer",
+                    "type": ["integer","string"],
                     "default": 1,
                     "description": "Number of skewed mixed normal populations"
                 },
