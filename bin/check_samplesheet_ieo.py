@@ -105,7 +105,7 @@ def check_samplesheet(file_in, file_out):
                     # Important the Lanes must be in the folder specified!
                     subfolders = list(p.glob("*"+rid+"*"+sid+"*"))
                     search = '*fastq.gz'
-                    fastqs = list(subfolders[0].glob('./' + search))
+                    fastqs = list(subfolders[0].glob('**/' + search))
                     if len(fastqs) == 0:
                         print_error(
                                 f"The path provided does not contain the files as RID+SID",
@@ -116,9 +116,9 @@ def check_samplesheet(file_in, file_out):
                     for ll in lanes:
                         print(ll)
                         search = "*"+rid+"*"+sid+'*'+ll+'*R1*fastq.gz'
-                        fastqs_1 = list(subfolders[0].glob(search))
+                        fastqs_1 = list(subfolders[0].glob('**/' + search))
                         search = "*"+rid+"*"+sid+'*'+ll+'*R2*fastq.gz'
-                        fastqs_2 = list(subfolders[0].glob(search))
+                        fastqs_2 = list(subfolders[0].glob('**/' + search))
                         
                         ## Auto-detect paired-end/single-end
                         sample_info = []  ## [single_end, fastq_1, fastq_2, strandedness]
@@ -143,7 +143,7 @@ def check_samplesheet(file_in, file_out):
                     # we need to get to the unique elements of "Lanes"
                     subfolders = list(p.glob("*"+rid+"*"+sid+"*"))
                     search = '*R1*fastq.gz'
-                    fastqs = list(subfolders[0].glob('./' + search))
+                    fastqs = list(subfolders[0].glob('**/' + search))
                     fastqs = [ re.sub(r'^.*?_L', 'L', str(x)).split('_')[0] for x in fastqs]
                     
                     if len(fastqs) == 0:
@@ -154,10 +154,11 @@ def check_samplesheet(file_in, file_out):
                             )
                     
                     for ll in fastqs:
+                        print(ll)
                         search = "*"+rid+"*"+sid+'*'+ll+'*R1*fastq.gz'
-                        fastqs_1 = list(subfolders[0].glob(search))
+                        fastqs_1 = list(subfolders[0].glob('**/' + search))
                         search = "*"+rid+"*"+sid+'*'+ll+'*R2*fastq.gz'
-                        fastqs_2 = list(subfolders[0].glob(search))
+                        fastqs_2 = list(subfolders[0].glob('**/' + search))
                         
                         ## Auto-detect paired-end/single-end
                         sample_info = []  ## [single_end, fastq_1, fastq_2, strandedness]
